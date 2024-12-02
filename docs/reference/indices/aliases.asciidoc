@@ -1,20 +1,20 @@
 [[indices-aliases]]
-=== Aliases API
+=== 别名Aliases API
 ++++
 <titleabbrev>Aliases</titleabbrev>
 ++++
 
-Performs one or more <<aliases,alias>> actions in a single atomic operation.
+在一个单一的原子操作中执行一个或多个 <<aliases,别名>> 操作
 
 [source,console]
 ----
-POST _aliases
+POST _aliases  // 向 _aliases 发送 POST 请求
 {
-  "actions": [
+  "actions": [  // 定义要执行的操作列表
     {
-      "add": {
-        "index": "my-data-stream",
-        "alias": "my-alias"
+      "add": {  // 添加操作
+        "index": "my-data-stream",  // 指定要添加的数据流或索引名称
+        "alias": "my-alias"  // 指定要添加的别名
       }
     }
   ]
@@ -31,14 +31,12 @@ POST _aliases
 [[indices-aliases-api-prereqs]]
 ==== {api-prereq-title}
 
-* If the {es} {security-features} are enabled, you must have the following
-<<privileges-list-indices,index privileges>>:
+* 如果启用了 {es} 的 {security-features}，您必须具有以下 <<privileges-list-indices,`索引权限`>>：
 
-** To use the `add` or `remove` action, you must have the `manage` index
-privilege for the alias and its data streams or indices.
+** 要使用 `add` 或 `remove` 操作，您必须对别名及其数据流或索引具有 `manage` 索引权限。
 
-** To use the `remove_index` action, you must have the `manage` index privilege
-for the index.
+** 要使用 `remove_index` 操作，您必须对索引具有 `manage` 索引权限。
+
 
 [[indices-aliases-api-query-params]]
 ==== {api-query-parms-title}

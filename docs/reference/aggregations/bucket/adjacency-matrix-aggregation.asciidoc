@@ -9,7 +9,7 @@ The request provides a collection of named filter expressions, similar to the `f
 request. 
 Each bucket in the response represents a non-empty cell in the matrix of intersecting filters.
 
-Given filters named `A`, `B` and `C` the response would return buckets with the following names:
+给定的过滤器名为 `A`, `B` and `C` the response would return buckets with the following names:
 
 
 [options="header"]

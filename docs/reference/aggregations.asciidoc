@@ -2,16 +2,15 @@
 = Aggregations
 
 [partintro]
---
-An aggregation summarizes your data as metrics, statistics, or other analytics.
-Aggregations help you answer questions like:
+---
+聚合可以将您的数据汇总为度量、统计或其他分析结果。聚合帮助您回答以下问题：
 
-* What's the average load time for my website?
-* Who are my most valuable customers based on transaction volume?
-* What would be considered a large file on my network?
-* How many products are in each product category?
+* 我的网站的平均加载时间是多少？
+* 基于交易量，哪些客户是我最有价值的客户？
+* 在我的网络上，什么样的文件可以被认为是大文件？
+* 每个产品类别中有多少产品？
 
-{es} organizes aggregations into three categories:
+{es} 将聚合分为三类：
 
 * <<search-aggregations-metrics,Metric>> aggregations that calculate metrics,
 such as a sum or average, from field values.

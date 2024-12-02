@@ -1,0 +1,333 @@
+[[search-aggregations]]
+= 聚合
+
+[partintro]
+--
+聚合可以将您的数据汇总为度量、统计或其他分析结果。聚合帮助您回答以下问题：
+
+* 我的网站的平均加载时间是多少？
+* 基于交易量，哪些客户是我最有价值的客户？
+* 在我的网络上，什么样的文件可以被认为是大文件？
+* 每个产品类别中有多少产品？
+
+{es} 将聚合分为三类：
+
+* <<search-aggregations-metrics,度量>> 聚合：从字段值计算度量，如总和或平均值。
+
+* <<search-aggregations-bucket,桶>> 聚合：根据字段值、范围或其他条件将文档分组到桶中。
+
+* <<search-aggregations-pipeline,管道>> 聚合：从其他聚合而不是文档或字段获取输入。
+
+[discrete]
+[[run-an-agg]]
+=== 运行聚合
+
+您可以通过指定 <<search-search,搜索 API>> 的 `aggs` 参数来运行聚合。以下搜索对 `my-field` 字段执行 <<search-aggregations-bucket-terms-aggregation,terms 聚合>>：
+
+[source,console]
+----
+GET /my-index-000001/_search
+{
+  "aggs": {
+    "my-agg-name": {
+      "terms": {
+        "field": "my-field"
+      }
+    }
+  }
+}
+----
+
+聚合结果位于响应的 `aggregations` 对象中：
+
+[source,console-result]
+----
+{
+  "took": 78,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 5,
+      "relation": "eq"
+    },
+    "max_score": 1.0,
+    "hits": [...]
+  },
+  "aggregations": {
+    "my-agg-name": {                           <1>
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": []
+    }
+  }
+}
+----
+
+<1> `my-agg-name` 聚合的结果。
+
+[discrete]
+[[change-agg-scope]]
+=== 更改聚合的范围
+
+使用 `query` 参数限制聚合运行的文档范围：
+
+[source,console]
+----
+GET /my-index-000001/_search
+{
+  "query": {
+    "range": {
+      "@timestamp": {
+        "gte": "now-1d/d",
+        "lt": "now/d"
+      }
+    }
+  },
+  "aggs": {
+    "my-agg-name": {
+      "terms": {
+        "field": "my-field"
+      }
+    }
+  }
+}
+----
+
+[discrete]
+[[return-only-agg-results]]
+=== 仅返回聚合结果
+
+默认情况下，包含聚合的搜索会返回搜索命中和聚合结果。要仅返回聚合结果，将 `size` 设置为 `0`：
+
+[source,console]
+----
+GET /my-index-000001/_search
+{
+  "size": 0,
+  "aggs": {
+    "my-agg-name": {
+      "terms": {
+        "field": "my-field"
+      }
+    }
+  }
+}
+----
+
+[discrete]
+[[run-multiple-aggs]]
+=== 运行多个聚合
+
+您可以在同一请求中指定多个聚合：
+
+[source,console]
+----
+GET /my-index-000001/_search
+{
+  "aggs": {
+    "my-first-agg-name": {
+      "terms": {
+        "field": "my-field"
+      }
+    },
+    "my-second-agg-name": {
+      "avg": {
+        "field": "my-other-field"
+      }
+    }
+  }
+}
+----
+
+[discrete]
+[[run-sub-aggs]]
+=== 运行子聚合
+
+桶聚合支持桶或度量子聚合。例如，一个带有 <<search-aggregations-metrics-avg-aggregation,avg>> 子聚合的 `terms` 聚合会为每个文档桶计算平均值。子聚合的嵌套没有层级或深度限制：
+
+[source,console]
+----
+GET /my-index-000001/_search
+{
+  "aggs": {
+    "my-agg-name": {
+      "terms": {
+        "field": "my-field"
+      },
+      "aggs": {
+        "my-sub-agg-name": {
+          "avg": {
+            "field": "my-other-field"
+          }
+        }
+      }
+    }
+  }
+}
+----
+
+响应将子聚合结果嵌套在其父聚合之下：
+
+[source,console-result]
+----
+{
+  ...
+  "aggregations": {
+    "my-agg-name": {                           <1>
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "foo",
+          "doc_count": 5,
+          "my-sub-agg-name": {                 <2>
+            "value": 75.0
+          }
+        }
+      ]
+    }
+  }
+}
+----
+
+<1> 父聚合 `my-agg-name` 的结果。
+<2> `my-agg-name` 的子聚合 `my-sub-agg-name` 的结果。
+
+[discrete]
+[[add-metadata-to-an-agg]]
+=== 添加自定义元数据
+
+使用 `meta` 对象将自定义元数据与聚合关联：
+
+[source,console]
+----
+GET /my-index-000001/_search
+{
+  "aggs": {
+    "my-agg-name": {
+      "terms": {
+        "field": "my-field"
+      },
+      "meta": {
+        "my-metadata-field": "foo"
+      }
+    }
+  }
+}
+----
+
+响应返回 `meta` 对象：
+
+[source,console-result]
+----
+{
+  ...
+  "aggregations": {
+    "my-agg-name": {
+      "meta": {
+        "my-metadata-field": "foo"
+      },
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": []
+    }
+  }
+}
+----
+
+[discrete]
+[[return-agg-type]]
+=== 返回聚合类型
+
+默认情况下，聚合结果包括聚合的名称但不包括其类型。要返回聚合类型，使用 `typed_keys` 查询参数。
+
+[source,console]
+----
+GET /my-index-000001/_search?typed_keys
+{
+  "aggs": {
+    "my-agg-name": {
+      "histogram": {
+        "field": "my-field",
+        "interval": 1000
+      }
+    }
+  }
+}
+----
+
+响应返回聚合类型作为聚合名称的前缀。
+
+重要提示：某些聚合返回的聚合类型与请求中的类型不同。例如，`terms`、<<search-aggregations-bucket-significantterms-aggregation,显著项>> 和 <<search-aggregations-metrics-percentile-aggregation,百分位数>> 聚合根据聚合字段的数据类型返回不同的聚合类型。
+
+[source,console-result]
+----
+{
+  ...
+  "aggregations": {
+    "histogram#my-agg-name": {                 <1>
+      "buckets": []
+    }
+  }
+}
+----
+
+<1> 聚合类型 `histogram`，后跟 `#` 分隔符和聚合名称 `my-agg-name`。
+
+[discrete]
+[[use-scripts-in-an-agg]]
+=== 在聚合中使用脚本
+
+当字段不完全匹配所需的聚合时，您应该在 <<runtime,运行时字段>> 上进行聚合：
+
+[source,console]
+----
+GET /my-index-000001/_search?size=0
+{
+  "runtime_mappings": {
+    "message.length": {
+      "type": "long",
+      "script": "emit(doc['message.keyword'].value.length())"
+    }
+  },
+  "aggs": {
+    "message_length": {
+      "histogram": {
+        "interval": 10,
+        "field": "message.length"
+      }
+    }
+  }
+}
+----
+
+脚本动态计算字段值，这会增加聚合的一些开销。除了计算时间外，某些聚合（如 <<search-aggregations-bucket-terms-aggregation,`terms`>> 和 <<search-aggregations-bucket-filters-aggregation,`filters`>>）不能使用运行时字段的某些优化。总体而言，使用运行时字段的性能成本因聚合而异。
+
+// TODO 当我们有计算字段时，可以链接到这里。
+
+[discrete]
+[[agg-caches]]
+=== 聚合缓存
+
+为了更快的响应，{es} 将频繁运行的聚合结果缓存在 <<shard-request-cache,分片请求缓存>> 中。要获取缓存结果，请为每次搜索使用相同的 <<shard-and-node-preference,`preference` 字符串>>。如果您不需要搜索命中，<<return-only-agg-results,将 `size` 设置为 `0`>> 以避免填充缓存。
+
+{es} 将具有相同偏好字符串的搜索路由到相同的分片。如果分片之间的数据没有变化，分片将返回缓存的聚合结果。
+
+[discrete]
+[[limits-for-long-values]]
+=== `long` 值的限制
+
+在运行聚合时，{es} 使用 <<number,`double`>> 值来存储和表示数值数据。因此，对大于 +2^53^+ 的 <<number,`long`>> 数字进行聚合是近似的。
+--
+
+include::aggregations/bucket.asciidoc[]
+
+include::aggregations/metrics.asciidoc[]
+
+include::aggregations/pipeline.asciidoc[]

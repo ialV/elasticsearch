@@ -1,20 +1,14 @@
 [[search-aggregations-bucket]]
 == Bucket aggregations
 
-Bucket aggregations don't calculate metrics over fields like the metrics aggregations do, but instead, they create
-buckets of documents. Each bucket is associated with a criterion (depending on the aggregation type) which determines
-whether or not a document in the current context "falls" into it. In other words, the buckets effectively define document
-sets. In addition to the buckets themselves, the `bucket` aggregations also compute and return the number of documents
-that "fell into" each bucket.
+桶聚合（`Bucket Aggregations`）不会像度量聚合（`Metrics Aggregations`）那样计算字段上的度量，而是创建文档的桶。每个桶都与一个标准（取决于聚合类型）相关联，这个标准决定了当前上下文中的文档是否“落入”该桶。换句话说，这些桶有效地定义了文档集。除了桶本身，桶聚合还会计算并返回每个桶中“落入”的文档数量。
 
-Bucket aggregations, as opposed to `metrics` aggregations, can hold sub-aggregations. These sub-aggregations will be
-aggregated for the buckets created by their "parent" bucket aggregation.
+与度量聚合不同，桶聚合可以包含子聚合（`Sub-Aggregations`）。这些子聚合将在由其“父”桶聚合创建的桶中进行聚合。
 
-There are different bucket aggregators, each with a different "bucketing" strategy. Some define a single bucket, some
-define fixed number of multiple buckets, and others dynamically create the buckets during the aggregation process.
+有不同的桶聚合器（`Bucket Aggregators`），每种都有不同的“分桶”策略。有些定义单个桶，有些定义固定数量的多个桶，还有一些则在聚合过程中动态创建桶。
 
-NOTE: The <<search-settings-max-buckets,`search.max_buckets`>> cluster setting
-limits the number of buckets allowed in a single response.
+
+NOTE: <<search-settings-max-buckets,`search.max_buckets`>> 集群设置限制了单个响应中允许的桶的数量。
 
 include::bucket/adjacency-matrix-aggregation.asciidoc[]
 
